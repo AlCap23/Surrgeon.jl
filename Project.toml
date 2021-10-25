@@ -1,0 +1,13 @@
+name = "Surrgeon"
+uuid = "99577f1c-151b-4768-bad2-443b30438b0d"
+authors = ["JuliusMartensen <julius.martensen@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
