@@ -7,11 +7,15 @@ import AbstractTrees: children
 
 using ForwardDiff
 
+using Metatheory
+
 using DocStringExtensions
 
 ## Abstract types and minimum function definition
 
 abstract type AbstractSurrogate end;
+abstract type AbstractTransformation end;
+
 
 is_solved(::AbstractSurrogate) = false
 AbstractTrees.children(::AbstractSurrogate) = ()
@@ -36,6 +40,9 @@ end
 
 
 include("./ad_backend.jl")
+
+include("./transforms.jl")
+export neg, square
 
 include("./surrogate.jl")
 export Surrogate, LinearSurrogate

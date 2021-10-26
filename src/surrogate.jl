@@ -8,7 +8,7 @@ mutable struct Surrogate <: AbstractSurrogate
     linears::BitVector
 
     # Transformations
-    h::AbstractVector{Function}
+    h::Transformation
     op::Function
 
     # Add tree structure
@@ -30,7 +30,8 @@ mutable struct Surrogate <: AbstractSurrogate
         return new(
             f_, 
             inc,
-            lins
+            lins, 
+            Transformation()
             )
     end
 end
