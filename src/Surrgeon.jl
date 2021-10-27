@@ -48,4 +48,7 @@ include("./surrogate.jl")
 export Surrogate, LinearSurrogate
 export children, leftchild!, rightchild!, set_op!
 
+include("./cuts.jl")
+export find_pivot
+
 end

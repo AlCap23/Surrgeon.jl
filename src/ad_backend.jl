@@ -29,6 +29,20 @@ function create_incidence(f::Function, x::AbstractMatrix; abstol = eps(), reltol
     BitVector(∂ .>= reltol)
 end
 
+#"""
+#$(SIGNATURES)
+#
+#Estimates which parts of the multivariate function 'f' can be isolated in a single variable by evaluating the hessian over each data column of
+#'x' and computing its columnwise variance. Returns a 'BitMatrix' which indicates if the important contributions, e.g. those who are greater than 'abstol', 
+#only come from a single variable indicated by true.
+#"""
+#function estimate_isolations(f, x; abstol = eps(), reltol = eps(), kwargs...)
+#    hess = _hessian(f)
+#    inc = reduce(hcat, map(i->mean(map(xi->hess(xi)[:,i],eachcol(x))), 1:size(x,1)))
+#    inc
+#    #sum(inc, dims = 2) .== 1
+#end
+
 """
 $(SIGNATURES)
 
