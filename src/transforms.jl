@@ -32,7 +32,10 @@ f_inv(::typeof(log)) = exp
 f_inv(::typeof(sqrt)) = square
 f_inv(::typeof(square)) = sqrt
 
-
+f_inv(::typeof(+)) = -
+f_inv(::typeof(-)) = +
+f_inv(::typeof(*)) = /
+f_inv(::typeof(/)) = *
 
 ## Type
 

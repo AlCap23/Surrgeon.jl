@@ -37,17 +37,17 @@ mutable struct Surrogate <: AbstractSurrogate
 end
 
 function AbstractTrees.children(s::Surrogate)
-    if isdefined(s, :left)
-        if isdefined(s, :right)
+    if isdefined(s, :left) && !(s===s.left)
+        if isdefined(s, :right) !(s===s.right)
             return (s.left, s.right)
         end
         return (s.left,)
     end
-    isdefined(s, :right) && return (s.right,)
+    (isdefined(s, :right) && !(s===s.right)) && return (s.right,)
     return ()
 end
 
-has_children(s::Surrogate) = isdefined(s, :left) || isdefined(s, :right)
+has_children(s::Surrogate) = (isdefined(s, :left) && !(s === s.left)) || (isdefined(s, :right) && !(s === s.right))
 is_solved(s::Surrogate) = has_children(s) ? all(map(is_solved, children(s))) : false 
 params(s::Surrogate) = has_children(s) ? map(params, children(s)) : []
 
@@ -59,19 +59,13 @@ function (s::Surrogate)(x, p = params(s))
     return s.f(x)
 end
 
-function leftchild!(s::Surrogate, left::AbstractSurrogate; force::Bool = false)
-    if !force
-        !isdefined(s, :left) || error("Left child is already assigned.")
-    end
+function leftchild!(s::Surrogate, left::AbstractSurrogate)
     left.parent = s
     s.left = left
     return
 end
 
-function rightchild!(s::Surrogate, right::AbstractSurrogate; force::Bool = false)
-    if !force
-        !isdefined(s, :right) || error("Right child is already assigned.")
-    end
+function rightchild!(s::Surrogate, right::AbstractSurrogate)
     right.parent = s
     s.right = right
     return
@@ -80,6 +74,15 @@ end
 function set_op!(s::Surrogate, op)
     s.op = op
 end
+
+function remove_right!(s::Surrogate)
+    setfield!(s, :right, s)
+end
+
+function remove_left!(s::Surrogate)
+    setfield!(s, :left, s)
+end
+
 
 # Iterations
 
@@ -101,27 +104,51 @@ mutable struct LinearSurrogate{T} <: AbstractSurrogate where T <: Number
     determination::T
 
     # Output transforms
-    h::AbstractVector{Function}
+    h::Transformation
 
     # Parent, if needed
     parent::AbstractSurrogate
 
+    function LinearSurrogate(w::AbstractVector{T}, bias::T, 
+        inc::BitVector, linears::BitVector, determination::T = zero(T),
+        h::Transformation = Transformation(), parent = nothing
+        ) where T <: Number
+
+        obj =  new{eltype(w)}(w, bias, inc, linears, determination, h)
+
+        if !isa(parent, AbstractSurrogate)
+            obj.parent = obj
+        else
+            obj.parent = parent
+        end
+        return obj
+
+    end
+
     function LinearSurrogate(f::Function, x::AbstractMatrix{T}; kwargs...) where T <: Number
         inc = create_incidence(f, x)
         lins = Surrgeon.create_linearity(f, x) .* inc
-
+    
         inc != lins  && return Surrogate(f,x; kwargs...)
-
+    
         jac = Surrgeon._gradient(f)(mean(x, dims =2)[:,1]) .* lins .* inc
         y = reduce(hcat, map(f, eachcol(x)))
         bias = mean(y-jac'*x)
         rsq = one(T) .- sum(abs2, y .- bias - jac'x) ./ cov(y, dims = 2)
-
-        return new{T}(
-            jac[:,1], bias, inc, lins, first(rsq)
+    
+        obj =  new{eltype(x)}(
+            jac[:,1], bias, inc, lins, first(rsq), Transformation()
         )
+
+        obj.parent = obj
+        
+        return obj
     end
+
+    
 end
+
+
 
 (s::LinearSurrogate)(x::AbstractVector, p = params(s)) = [dot(p[1:end-1],x) + p[end]]
 (s::LinearSurrogate)(x::AbstractMatrix, p = params(s)) = reduce(hcat, map(xi->s(xi, p), eachcol(x)))
