@@ -85,7 +85,6 @@ function find_pivot(f::Function, x::AbstractMatrix, w::BitVector, ::typeof(*); a
     for i in 1:size(x,2)
         piv = fmin(x[:,i])
         if piv <= best
-            @show piv x[w,i]
             best = piv
             idx = i
         end
@@ -99,8 +98,26 @@ find_pivot(f::Function, x::AbstractMatrix, w::BitVector, ::typeof(-); kwargs...)
 
 find_pivot(s::Surrogate, args...; kwargs...) = find_pivot(s.f, args...; kwargs...)
 
+"""
+$(SIGNATURES)
 
+Tries to split the surrogate model with the given operator to construct a model which would read
 
+f(x) = op(g(x), h(x))
+
+and stores the surrogates g(x) and h(x) as the left and right child. 
+
+The `+` operator would result in 
+
+f(x) = g(x) + h(x)
+
+And the `/` operator in 
+
+f(x) = g(x) / h(x)
+
+If the absolute tolerance or relative tolerance, specified via the keywords `abstol` and `reltol`, of the resulting model is not sufficient, than the original surrogate will
+be returned.
+"""
 function split_by!(s::Surrogate, x::AbstractMatrix, w::BitVector, op::Function; kwargs...)
     idx = find_pivot(s, x, w, op; kwargs...)
     xval = x[w, idx]

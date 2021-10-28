@@ -54,7 +54,7 @@ params(s::Surrogate) = has_children(s) ? map(params, children(s)) : []
 
 function (s::Surrogate)(x, p = params(s))
     if has_children(s) && isdefined(s, :op)
-        return reduce(s.op, map(c->c(x, params(c)), children(s)))
+        return broadcast(s.op, s.left(x, params(s.left)), s.right(x, params(s.right)))
     end
     return s.f(x)
 end
